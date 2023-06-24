@@ -20,40 +20,84 @@ const PromptCardList = ({ data, handleTagClick }) => {
 
 const Feed = () => {
   const [searchText, setSearchText] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
   const [prompts, setPrompts] = useState([]);
 
-  const handleSearchChange = (e) => {
-
-  }
+  const fetchPrompts = async () => {
+    const response = await fetch("/api/prompt");
+    const data = await response.json();
+    setPrompts(data);
+  };
 
   useEffect(() =>{
-    const fetchPrompts = async () => {
-      const response = await fetch("/api/prompt");
-      const data = await response.json();
-      setPrompts(data);
-    }
-
     fetchPrompts();
-  }, [])
+  }, []);
 
+  console.log('prompts', prompts);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const promptsFiltered = filterPrompts(searchText);
+    console.log('promptsFiltered',promptsFiltered)
+    setSearchResults(promptsFiltered);
+  };
+
+  const handleSearchChange = (e) => {
+    e.preventDefault();
+    setSearchText(e.target.value);
+  };
+
+  const filterPrompts = (text) => {
+    const regExp = new RegExp(text, "i");
+    return prompts.filter((element) => 
+        regExp.test(element.creator.username) ||
+        regExp.test(element.prompt) ||
+        regExp.test(element.tag)
+    )
+    //   return prompts.filter((element) => 
+    //   (
+    //     element.creator.username.includes(text) ||
+    //     element.prompt.includes(text) ||
+    //     element.tag.includes(text)
+    //  ) )
+  };
+
+  const handleTagClick = (tag) => {
+    setSearchText(tag);
+    const promptsFiltered = filterPrompts(tag);
+    console.log('promptsFiltered',promptsFiltered)
+    setSearchResults(promptsFiltered);
+  }
 
   return (
     <section className='feed'>
-      <form className='relative w-full flex-center'>
+      <form onSubmit={handleSubmit}  className='relative w-full flex-center'>
         <input 
           type="text"
           placeholder='Search for a tag or username'
           value={searchText}
           onChange={handleSearchChange}
-          required
+          // required
           className='search_input peer'
         />
       </form>
 
-      <PromptCardList
-        data={prompts}
-        handleTagClick={() => {}}
+      { searchResults.length > 0 ? 
+        (
+          <PromptCardList
+          data={searchResults}
+          handleTagClick={handleTagClick}
+        />
+        ) :
+        (
+          <PromptCardList
+          data={prompts}
+          handleTagClick={handleTagClick}
       />
+        )
+      }
+
 
     </section>
   )
