@@ -1,5 +1,5 @@
 
-import Feed from '@components/feed';
+import Feed from '@components/Feed';
 
 const Home = () => {
   return (
